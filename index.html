@@ -1,0 +1,444 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Chalon dans la Rue 2026 — mon parcours</title>
+<style>
+:root{
+  --bg:#f7f7f8; --surface:#fff; --surface2:#f1f1f3; --line:#e4e4e7; --line2:#d4d4d8;
+  --ink:#18181b; --ink2:#52525b; --ink3:#8b8b94;
+  --accent:#2f6df6; --accent-soft:#e8effe;
+  --must:#e0245e; --want:#f59e0b; --maybe:#6366f1;
+  --ok:#15a05a; --warn:#e07b00; --bad:#dc2626;
+  --ok-soft:#e6f6ed; --warn-soft:#fdf1e0; --bad-soft:#fdeaea;
+  --r:10px; --shadow:0 1px 2px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --bg:#131316; --surface:#1c1c20; --surface2:#26262c; --line:#2e2e35; --line2:#3d3d46;
+    --ink:#f0f0f3; --ink2:#a7a7b4; --ink3:#75757f;
+    --accent:#6d9bff; --accent-soft:#1c2a4a;
+    --ok:#3ddc97; --warn:#ffa63d; --bad:#ff6b6b;
+    --ok-soft:#12301f; --warn-soft:#3a2a12; --bad-soft:#3a1a1a;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 4px 14px rgba(0,0,0,.3);
+  }
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  display:flex;flex-direction:column;overflow:hidden}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+button,select,input{font:inherit;color:inherit}
+
+/* ---------- barre du haut ---------- */
+.topbar{flex:0 0 auto;background:var(--surface);border-bottom:1px solid var(--line);
+  padding:9px 16px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.brand{font-weight:700;font-size:15px;letter-spacing:-.01em;white-space:nowrap}
+.brand span{font-weight:400;color:var(--ink3);font-size:12px}
+.steps{display:flex;gap:2px;background:var(--surface2);padding:3px;border-radius:9px}
+.steps button{background:none;border:0;padding:6px 14px;border-radius:7px;cursor:pointer;
+  font-size:13px;font-weight:500;color:var(--ink2);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.steps button .n{width:17px;height:17px;border-radius:50%;background:var(--line2);color:var(--surface);
+  font-size:10px;font-weight:700;display:grid;place-items:center}
+.steps button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow);font-weight:600}
+.steps button.on .n{background:var(--accent);color:#fff}
+.spacer{flex:1}
+
+/* ---------- boutons & contrôles ---------- */
+.btn{background:var(--surface);border:1px solid var(--line2);border-radius:8px;padding:6px 12px;
+  font-size:13px;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.sm{padding:4px 9px;font-size:12px}
+.sel{background:var(--surface);border:1px solid var(--line2);border-radius:8px;padding:5px 8px;font-size:13px;cursor:pointer}
+.field{display:flex;align-items:center;gap:7px}
+.field>label{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3);white-space:nowrap}
+.chip{border:1px solid var(--line2);background:var(--surface);color:var(--ink2);border-radius:999px;
+  padding:3px 11px;font-size:12px;cursor:pointer;user-select:none;white-space:nowrap}
+.chip:hover{border-color:var(--ink3)}
+.chip.on{background:var(--ink);border-color:var(--ink);color:var(--bg);font-weight:600}
+.tag{display:inline-block;font-size:10px;line-height:16px;padding:0 6px;border-radius:5px;
+  background:var(--surface2);color:var(--ink2);white-space:nowrap}
+.tag.j1{background:var(--bad-soft);color:var(--bad);font-weight:600}
+.tag.j2{background:var(--warn-soft);color:var(--warn);font-weight:600}
+.tag.in{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.tag.rare{background:var(--warn-soft);color:var(--warn);font-weight:700}
+.tag.free{background:transparent;border:1px dashed var(--line2);color:var(--ink3)}
+.muted{color:var(--ink3)}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3)}
+
+/* ---------- structure des étapes ---------- */
+main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.step{display:none;flex:1 1 auto;min-height:0;flex-direction:column}
+.step.on{display:flex}
+.toolbar{flex:0 0 auto;background:var(--surface);border-bottom:1px solid var(--line);
+  padding:8px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.scrollarea{flex:1 1 auto;min-height:0;overflow:auto}
+
+/* ---------- niveaux d'envie ---------- */
+.rank{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden;background:var(--surface)}
+.rank button{background:none;border:0;border-right:1px solid var(--line);padding:5px 9px;font-size:12px;cursor:pointer;color:var(--ink3);line-height:1.2}
+.rank button:last-child{border-right:0}
+.rank button:hover{background:var(--surface2)}
+.rank button.on{color:#fff;font-weight:600}
+.rank button.on[data-r="3"]{background:var(--must)}
+.rank button.on[data-r="2"]{background:var(--want)}
+.rank button.on[data-r="1"]{background:var(--maybe)}
+.rank button.on[data-r="-1"]{background:var(--ink3)}
+
+/* ---------- étape 1 : découvrir ---------- */
+#discoverPane{display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+#swWrap{width:min(560px,100%);display:flex;flex-direction:column;gap:9px;max-height:100%;min-height:0}
+#swCard{min-height:0}
+#swBody{min-height:0}
+#swFilters{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:8px 11px;box-shadow:var(--shadow)}
+.fbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.fpanel{display:none;margin-top:9px;border-top:1px solid var(--line);padding-top:9px}
+.fpanel.open{display:block}
+.frow{display:flex;gap:6px;align-items:baseline;margin-bottom:7px;flex-wrap:wrap}
+.frow>.lbl:first-child{flex:0 0 74px}
+#swCard{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  display:flex;flex-direction:column;position:relative;box-shadow:var(--shadow);touch-action:pan-y;user-select:none}
+#swImg{width:100%;height:200px;object-fit:cover;background:var(--surface2);flex:0 0 auto;display:block}
+#swBody{padding:14px 16px;overflow:auto;flex:1 1 auto}
+#swBody h3{margin:0;font-size:21px;line-height:1.2;letter-spacing:-.01em}
+#swCie{color:var(--ink2);font-size:13px;margin:3px 0 0}
+#swSub{font-style:italic;color:var(--accent);font-size:13px;margin:6px 0 0}
+#swTags{margin:10px 0 9px;display:flex;gap:4px;flex-wrap:wrap}
+#swDesc{font-size:13.5px;line-height:1.55;white-space:pre-line;color:var(--ink2)}
+#swSeances{margin-top:12px;font-size:12.5px;color:var(--ink2);border-top:1px solid var(--line);padding-top:10px;line-height:1.6}
+#swLinks{margin-top:11px;display:flex;gap:6px;flex-wrap:wrap}
+#swFoot{flex:0 0 auto;border-top:1px solid var(--line);padding:9px 10px 10px;background:var(--surface)}
+.swRow1{display:flex;gap:6px;align-items:center;justify-content:center;margin-bottom:8px;font-size:12px;color:var(--ink3)}
+.swRow2{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.swRow3{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:7px}
+.big{padding:11px 6px;font-size:13.5px;font-weight:650;border-radius:10px;border:1px solid var(--line2);
+  cursor:pointer;background:var(--surface);color:var(--ink);display:flex;align-items:center;justify-content:center;gap:6px}
+#swMust{background:var(--must);border-color:var(--must);color:#fff}
+#swWant{background:var(--want);border-color:var(--want);color:#fff}
+#swMaybe{border-color:var(--maybe);color:var(--maybe)}
+#swNo{border-color:var(--line2);color:var(--ink3)}
+#swStamp{position:absolute;top:16px;left:16px;font-size:24px;font-weight:800;padding:4px 12px;border-radius:9px;
+  opacity:0;pointer-events:none;transform:rotate(-11deg);color:#fff;z-index:4}
+#swClose{position:absolute;top:9px;right:9px;z-index:5;background:rgba(0,0,0,.55);color:#fff;border:0;
+  border-radius:8px;width:30px;height:30px;font-size:15px;cursor:pointer}
+
+/* ---------- étape 2 : mes envies ---------- */
+.revwrap{padding:14px 16px 40px;max-width:1300px;margin:0 auto}
+.revgroup{margin-bottom:26px}
+.revhead{display:flex;align-items:center;gap:9px;margin-bottom:10px;position:sticky;top:0;
+  background:var(--bg);padding:6px 0;z-index:2}
+.revhead .dot{width:9px;height:9px;border-radius:50%}
+.revhead h2{margin:0;font-size:14px;font-weight:650}
+.revgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.rcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px;
+  display:flex;gap:10px;box-shadow:var(--shadow)}
+.rcard img{width:64px;height:64px;object-fit:cover;border-radius:7px;background:var(--surface2);flex:0 0 auto}
+.rcard .meta{min-width:0;flex:1}
+.rcard b{display:block;font-size:13px;line-height:1.25;font-weight:650}
+.rcard .cie{font-size:11.5px;color:var(--ink3);margin-bottom:5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rcard .rank{margin-top:7px}
+.rcard .tags{display:flex;gap:3px;flex-wrap:wrap}
+
+/* ---------- étape 3 : planning ---------- */
+#planPane{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 372px}
+#calWrap{min-width:0;display:flex;flex-direction:column;min-height:0}
+#cal{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:52px minmax(0,1fr);overflow:hidden}
+#axisWrap{overflow:hidden;position:relative;border-right:1px solid var(--line)}
+#axis{position:absolute;inset:0;will-change:transform}
+#axis .t{position:absolute;right:7px;font-size:11px;color:var(--ink3);transform:translateY(-50%)}
+#scroll{overflow:auto;position:relative}
+#grid{position:relative}
+.hr{position:absolute;left:0;right:0;border-top:1px solid var(--line)}
+.hr.half{border-top-style:dotted;opacity:.55}
+#head{position:sticky;top:0;z-index:12;height:0}
+.hcell{position:absolute;top:0;height:28px;background:var(--surface);border:1px solid var(--line);
+  border-radius:0 0 7px 7px;font-size:10.5px;padding:5px 7px;overflow:hidden;white-space:nowrap;
+  text-overflow:ellipsis;color:var(--ink3)}
+.hcell b{color:var(--ink)}
+#listView{flex:1 1 auto;min-height:0;overflow:auto;padding:12px 16px 40px}
+#listView .ev{position:static!important;width:auto!important;height:auto!important;margin-bottom:6px}
+.statbar{flex:0 0 auto;font-size:11.5px;color:var(--ink3);padding:5px 16px;border-top:1px solid var(--line);
+  background:var(--surface);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.ev{position:absolute;border-radius:9px;padding:5px 8px;overflow:hidden;cursor:pointer;background:var(--surface);
+  border:1px solid var(--line);border-left:4px solid var(--c);box-shadow:var(--shadow)}
+.ev:hover{z-index:8;border-color:var(--ink3)}
+.ev .h{display:block;font-size:10.5px;color:var(--ink3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev b{font-size:12.5px;font-weight:650;line-height:1.25;margin:1px 0;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.ev i{display:block;font-style:normal;font-size:11px;color:var(--ink3);line-height:1.3;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev .badges{display:block;margin-top:3px;line-height:1.5;white-space:nowrap;overflow:hidden}
+.ev.sel{background:var(--ok-soft);border-color:var(--ok)}
+.ev.tight{outline:2px solid var(--warn);outline-offset:-2px}
+.ev.blocked{opacity:.22;filter:grayscale(1)}
+.ev.dup{opacity:.45;filter:grayscale(.7);border-style:dashed}
+.ev.off{opacity:.14;filter:grayscale(1)}
+.ev.no{opacity:.5;background-image:repeating-linear-gradient(45deg,transparent 0 4px,var(--line2) 4px 6px)}
+.ev.no b{text-decoration:line-through}
+.ev.no .badges{display:none}
+.ev.win{border-left-style:dotted;border-left-width:5px}
+.ev.r3{box-shadow:inset 3px 0 0 -1px var(--must),var(--shadow)}
+.ev.r2{box-shadow:inset 3px 0 0 -1px var(--want),var(--shadow)}
+.ev.r1{box-shadow:inset 3px 0 0 -1px var(--maybe),var(--shadow)}
+.evbtn{position:absolute;top:3px;z-index:9;width:20px;height:20px;line-height:19px;text-align:center;
+  border-radius:6px;font-size:11px;color:var(--ink3);background:var(--surface2);border:1px solid var(--line);
+  opacity:0;cursor:pointer;user-select:none}
+.ev:hover .evbtn{opacity:1}
+.evbtn.b1{right:3px}.evbtn.b2{right:26px}
+.ev.no .evbtn.b1{opacity:1;color:var(--bad);border-color:var(--bad)}
+.ev.r3 .evbtn.b2{opacity:1;color:var(--must);border-color:var(--must)}
+.ev.r2 .evbtn.b2{opacity:1;color:var(--want);border-color:var(--want)}
+.ev.r1 .evbtn.b2{opacity:1;color:var(--maybe);border-color:var(--maybe)}
+
+/* ---------- panneau Ma sélection ---------- */
+#side{background:var(--surface);border-left:1px solid var(--line);overflow:auto;padding:14px}
+#side h2{font-size:12px;margin:0 0 11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)}
+.report{background:var(--accent-soft);border:1px solid var(--accent);border-radius:9px;padding:10px 12px;
+  margin-bottom:14px;font-size:12px;line-height:1.55}
+.daysep{font-size:12px;font-weight:700;margin:16px 0 8px;color:var(--ink);
+  border-bottom:1px solid var(--line);padding-bottom:5px}
+.pick{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--c);
+  border-radius:9px;padding:8px 10px;box-shadow:var(--shadow)}
+.pick b{display:block;font-size:13px;line-height:1.3}
+.pick small{color:var(--ink3);font-size:11.5px;line-height:1.45;display:block;margin-top:3px}
+.pick .venue{color:var(--ink2);font-weight:600}
+.pick .x{float:right;cursor:pointer;color:var(--ink3);font-size:15px;line-height:1;padding:0 3px}
+.leg{margin:0 0 0 14px;padding:7px 0 7px 13px;border-left:2px dashed var(--line2);font-size:11.5px;
+  color:var(--ink3);line-height:1.6}
+.leg.ok{border-color:var(--ok)}
+.leg.warn{border-color:var(--warn);color:var(--warn)}
+.leg.bad{border-color:var(--bad);color:var(--bad);background:var(--bad-soft);
+  border-radius:0 8px 8px 0;padding-right:9px;font-weight:500}
+.leg .k{color:var(--ink2);font-weight:600}
+.leg.warn .k,.leg.bad .k{color:inherit}
+.sugg{margin:6px 0 0 27px;font-size:11.5px}
+.sugg summary{cursor:pointer;color:var(--accent);list-style:none;padding:3px 0}
+.sugg summary::-webkit-details-marker{display:none}
+.sugg summary::before{content:'▸ ';font-size:10px}
+.sugg[open] summary::before{content:'▾ '}
+.sitem{background:var(--surface2);border:1px solid var(--line);border-radius:8px;padding:7px 9px;margin:5px 0}
+.sitem b{display:block;font-size:12px;line-height:1.3}
+.sitem small{color:var(--ink3);font-size:11px;display:block;margin:2px 0 5px}
+.alert{background:var(--bad-soft);border:1px solid var(--bad);color:var(--bad);border-radius:9px;
+  padding:9px 11px;font-size:12px;line-height:1.5;margin-bottom:12px}
+.alert b{display:block;margin-bottom:3px}
+
+/* ---------- réglages ---------- */
+.drawer{position:fixed;inset:0;z-index:120;background:rgba(0,0,0,.45);display:none;justify-content:flex-end}
+.drawer.on{display:flex}
+.drawer .inner{background:var(--bg);width:min(430px,100%);height:100%;overflow:auto;padding:18px}
+.drawer h2{margin:0 0 4px;font-size:17px}
+.setrow{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
+.setrow .n{flex:1;font-size:13px}
+.setrow .n small{display:block;color:var(--ink3);font-size:11px}
+
+/* ---------- swipe overlay ---------- */
+#swipe{position:fixed;inset:0;z-index:100;background:rgba(10,10,14,.72);display:none;
+  align-items:center;justify-content:center;padding:12px}
+#swipe.on{display:flex}
+#swipe #swWrap{max-height:calc(100dvh - 24px);min-height:0}
+#swipe #swCard{flex:1 1 auto;min-height:0}
+
+/* ---------- mobile ---------- */
+.mobonly{display:none}
+/* « screen and » est indispensable : une page A4 fait ~794 px, sans ça les règles
+   mobiles s'appliqueraient à l'impression et masqueraient le panneau Ma sélection. */
+@media screen and (max-width:860px){
+  .mobonly{display:flex}
+  .desktoponly{display:none!important}
+  .topbar{padding:8px 12px;gap:9px}
+  .brand span{display:none}
+  .steps{width:100%;order:3}
+  .steps button{flex:1;justify-content:center;padding:8px 4px;font-size:12px}
+  .toolbar{padding:7px 10px;gap:6px}
+  .toolbar .field>label{display:none}
+  .toolbar .btn,.toolbar .chip,.toolbar .sel{font-size:12px;padding:5px 9px}
+  .statbar{font-size:10.5px;padding:4px 10px}
+  #planPane{grid-template-columns:1fr}
+  #planPane>#side{display:none;border-left:0}
+  #planPane.showside>#calWrap{display:none}
+  #planPane.showside>#side{display:block}
+  .revwrap{padding:12px 12px 40px}
+  .revgrid{grid-template-columns:1fr}
+  #discoverPane{padding:0;align-items:stretch}
+  #swWrap{gap:0;height:100%}
+  #swFilters{border-radius:0;border-left:0;border-right:0;box-shadow:none}
+  #swCard{border-radius:0;border-left:0;border-right:0}
+  #swipe{padding:0}
+  #swipe #swWrap{max-height:100dvh;height:100dvh}
+  #swImg{height:150px}
+  .swRow2,.swRow3{grid-template-columns:1fr 1fr}
+  .drawer .inner{width:100%}
+}
+@media print{
+  body{overflow:visible;display:block;background:#fff;color:#000}
+  .topbar,.toolbar,#calWrap,.statbar,#swipe,.drawer,.pick .x,.sugg,.btn{display:none!important}
+  #planPane{display:block}
+  #planPane>#side,#planPane.showside>#side{display:block!important}
+  #planPane.showside>#calWrap{display:none!important}
+  #side{border:0;overflow:visible;padding:0;background:#fff}
+  .step{display:none!important}
+  #step-plan{display:block!important}
+  .pick,.leg,.alert{break-inside:avoid;box-shadow:none}
+  .leg{color:#444}
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">Chalon dans la Rue 2026 <span>· 39ᵉ édition, 23→26 juillet</span></div>
+  <nav class="steps" id="steps">
+    <button data-s="discover"><span class="n">1</span> Découvrir</button>
+    <button data-s="review"><span class="n">2</span> Mes envies</button>
+    <button data-s="plan"><span class="n">3</span> Mon planning</button>
+  </nav>
+  <div class="spacer desktoponly"></div>
+  <button class="btn desktoponly" id="openSettings">⚙︎ Réglages</button>
+</header>
+
+<main>
+  <!-- ÉTAPE 1 -->
+  <section class="step" id="step-discover">
+    <div id="discoverPane" class="scrollarea">
+      <div id="swWrap">
+        <div id="swFilters">
+          <div class="fbar">
+            <button class="btn sm" id="fToggle">☰ Filtrer</button>
+            <span class="muted" id="fCount" style="font-size:12px"></span>
+            <span class="spacer"></span>
+            <select class="sel" id="fOrder" style="font-size:12px">
+              <option value="rare">les plus rares d'abord</option>
+              <option value="chrono">ordre chronologique</option>
+              <option value="alea">aléatoire</option>
+            </select>
+          </div>
+          <div class="fpanel" id="fPanel">
+            <div class="frow"><span class="lbl">Sélection</span><span id="fCats"></span></div>
+            <div class="frow"><span class="lbl">Genre</span><span id="fTypes"></span></div>
+            <div class="frow"><span class="lbl">Public</span><span id="fReps"></span></div>
+            <div class="frow"><span class="lbl">Durée max</span>
+              <select class="sel" id="fDur"><option value="0">peu importe</option><option value="30">30 min</option><option value="45">45 min</option><option value="60">1 h</option><option value="90">1 h 30</option></select>
+              <span class="lbl">Jauge mini</span>
+              <select class="sel" id="fJauge"><option value="0">peu importe</option><option value="200">200</option><option value="400">400</option><option value="800">800</option></select>
+            </div>
+            <div class="frow"><span class="lbl"></span><span class="chip" id="fClear">tout effacer</span></div>
+          </div>
+        </div>
+        <div id="swCard">
+          <button id="swClose" title="Fermer">✕</button>
+          <div id="swStamp"></div>
+          <img id="swImg" alt="">
+          <div id="swBody">
+            <h3 id="swTitle"></h3>
+            <p id="swCie"></p>
+            <p id="swSub"></p>
+            <div id="swTags"></div>
+            <div id="swDesc"></div>
+            <div id="swSeances"></div>
+            <div id="swLinks"></div>
+          </div>
+          <div id="swFoot">
+            <div class="swRow1">
+              <span id="swCount"></span>
+              <button class="btn sm" id="swSkip">passer</button>
+              <button class="btn sm" id="swBack">↩ annuler</button>
+            </div>
+            <div class="swRow2">
+              <button class="big" id="swMust">★ Absolument</button>
+              <button class="big" id="swWant">♥ Ça m'intéresse</button>
+            </div>
+            <div class="swRow3">
+              <button class="big" id="swMaybe">? Peut-être</button>
+              <button class="big" id="swNo">✕ Pas pour moi</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ÉTAPE 2 -->
+  <section class="step" id="step-review">
+    <div class="toolbar">
+      <div class="field"><label>Chercher</label><input class="sel" id="revQ" type="search" placeholder="titre, compagnie…"></div>
+      <span class="chip" id="revShowNone">Afficher les non classés</span>
+      <span class="chip" id="revShowNo">Afficher les refusés</span>
+      <span class="spacer"></span>
+      <button class="btn" id="revDiscover">♥ Continuer à découvrir</button>
+      <button class="btn primary" id="revToPlan">Générer mon planning →</button>
+    </div>
+    <div class="scrollarea"><div class="revwrap" id="revBody"></div></div>
+  </section>
+
+  <!-- ÉTAPE 3 -->
+  <section class="step" id="step-plan">
+    <div class="toolbar">
+      <div class="field"><label>J'y suis</label><span class="field" id="presence"></span></div>
+      <button class="btn primary" id="build">⚡ Générer</button>
+      <span class="spacer desktoponly"></span>
+      <div class="field"><label>Jour</label><span class="steps" id="tabs" style="padding:2px"></span></div>
+      <div class="field"><label>Vue</label>
+        <select class="sel" id="view"><option value="cal">Calendrier</option><option value="lieu">Par lieu</option><option value="list">Liste</option></select>
+      </div>
+      <span class="chip" id="hideBlocked">Masquer les indispos</span>
+      <span class="chip" id="onlyRanked">Mes envies seules</span>
+      <button class="btn mobonly" id="toggleSide">📋 Ma sélection</button>
+      <button class="btn mobonly" id="openSettings2">⚙︎</button>
+    </div>
+    <div id="planPane">
+      <div id="calWrap">
+        <div id="cal"><div id="axisWrap"><div id="axis"></div></div><div id="scroll"><div id="head"></div><div id="grid"></div></div></div>
+        <div id="listView" style="display:none"></div>
+        <div class="statbar" id="stat"></div>
+      </div>
+      <aside id="side">
+        <h2>Ma sélection <span id="count"></span></h2>
+        <div id="report"></div>
+        <div id="alerts"></div>
+        <div id="picks"></div>
+        <div style="display:flex;gap:7px;margin-top:16px;flex-wrap:wrap">
+          <button class="btn" onclick="window.print()">Imprimer / PDF</button>
+          <button class="btn" id="clearPlan">Vider</button>
+          <button class="btn mobonly" id="backToCal">← Calendrier</button>
+        </div>
+        <p class="muted" style="font-size:11.5px;line-height:1.6;margin-top:18px" id="legend"></p>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<div class="drawer" id="settings"><div class="inner">
+  <h2>Réglages</h2>
+  <p class="muted" style="font-size:12px;margin:0 0 14px">
+    Le temps nécessaire entre deux spectacles = <b>temps de marche</b> + <b>avance à prendre</b> selon la jauge.
+    Plus la jauge est petite, plus il faut arriver tôt pour avoir une place.
+  </p>
+  <div id="setTiers"></div>
+  <div class="setrow">
+    <div class="n">Vitesse de marche<small>en foule, détour des rues inclus</small></div>
+    <select class="sel" id="setSpeed">
+      <option value="3.4">lente — 3,4 km/h</option>
+      <option value="4.2">normale — 4,2 km/h</option>
+      <option value="5">rapide — 5 km/h</option>
+    </select>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap">
+    <button class="btn" id="setDefaults">Valeurs par défaut</button>
+    <button class="btn" id="resetAll">Tout réinitialiser</button>
+    <span class="spacer"></span>
+    <button class="btn primary" id="closeSettings">Fermer</button>
+  </div>
+</div></div>
+
+<script src="data.js"></script>
+<script src="app.js?v=3"></script>
+</body>
+</html>
