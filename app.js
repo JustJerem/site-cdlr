@@ -311,7 +311,8 @@ function drawReview(){
     return {u, e0, reps, dispo:reps.filter(e => S.days.has(e.d)).length};
   }).filter(s => !q || (s.e0.t+' '+s.e0.c).toLowerCase().includes(q));
 
-  const groups = [3,2,1].concat(S.revNone?[0]:[]).concat(S.revNo?[-1]:[]);
+  const force = q.trim() !== '';
+  const groups = [3,2,1].concat((S.revNone || force) ? [0] : []).concat((S.revNo || force) ? [-1] : []);
   let html = '';
   for(const g of groups){
     const list = shows.filter(s => rk(s.u) === g).sort((a,b) => a.e0.t.localeCompare(b.e0.t));
