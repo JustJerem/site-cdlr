@@ -167,13 +167,6 @@ function go(step){
 }
 $('steps').onclick = e => {const b = e.target.closest('button'); if(b) go(b.dataset.s)};
 $('revDiscover').onclick = () => go('discover');
-$('revReset').onclick = () => {
-  if (confirm("Voulez-vous vraiment réinitialiser toutes vos envies ? Elles repasseront toutes en 'Non classées'.")) {
-    S.rank.clear();
-    save();
-    drawReview();
-  }
-};
 $('revToPlan').onclick   = () => {go('plan'); buildPlan()};
 $('swClose').onclick     = () => go('review');
 
@@ -357,10 +350,25 @@ function drawReview(){
       <div class="revgrid">` + list.map(s => rcard(s)).join('') + `</div></div>`;
   }
   const nNone = shows.filter(s => !rk(s.u)).length;
-  if(!S.revNone && nNone) html += `<p class="muted" style="font-size:12.5px">${nNone} spectacle(s) pas encore classé(s) — <a href="#" id="lnkDiscover">continuer la découverte</a> ou <a href="#" id="lnkShowNone">les afficher ici</a>.</p>`;
+  
+  let footerHtml = '';
+  if(!S.revNone && nNone) {
+    footerHtml = `${nNone} spectacle(s) pas encore classé(s) — <a href="#" id="lnkDiscover">continuer la découverte</a> ou <a href="#" id="lnkShowNone">les afficher ici</a>.`;
+  }
+  
+  html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-top:20px; flex-wrap:wrap; gap:12px;" class="muted">
+    <div style="font-size:12.5px">${footerHtml}</div>
+    ${S.rank.size > 0 ? `<button class="btn" id="revResetBtn" style="color:var(--bad);border-color:var(--bad)">✕ Réinitialiser mes envies</button>` : ''}
+  </div>`;
+  
   $('revBody').innerHTML = html || '<p class="muted">Aucun spectacle ne correspond.</p>';
   const a = $('lnkDiscover'); if(a) a.onclick = e => {e.preventDefault(); go('discover')};
   const b = $('lnkShowNone'); if(b) b.onclick = e => {e.preventDefault(); S.revNone=true; drawReview(); syncChips()};
+  const r = $('revResetBtn'); if(r) r.onclick = () => {
+    if (confirm("Voulez-vous vraiment réinitialiser toutes vos envies ? Elles repasseront toutes en 'Non classées'.")) {
+      S.rank.clear(); save(); drawReview();
+    }
+  };
 }
 const emptyGroup = g => `<div class="revgroup"><div class="revhead">
     <span class="dot" style="background:${LV[g].col}"></span><h2>${LV[g].ico} ${LV[g].lbl}</h2>
