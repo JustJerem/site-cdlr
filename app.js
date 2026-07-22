@@ -167,6 +167,13 @@ function go(step){
 }
 $('steps').onclick = e => {const b = e.target.closest('button'); if(b) go(b.dataset.s)};
 $('revDiscover').onclick = () => go('discover');
+$('revReset').onclick = () => {
+  if (confirm("Voulez-vous vraiment réinitialiser toutes vos envies ? Elles repasseront toutes en 'Non classées'.")) {
+    S.rank.clear();
+    save();
+    drawReview();
+  }
+};
 $('revToPlan').onclick   = () => {go('plan'); buildPlan()};
 $('swClose').onclick     = () => go('review');
 
