@@ -133,6 +133,37 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 #swStamp{position:absolute;top:16px;left:16px;font-size:24px;font-weight:800;padding:4px 12px;border-radius:9px;
   opacity:0;pointer-events:none;transform:rotate(-11deg);color:#fff;z-index:4}
 
+.tooltip-hint {
+  position: absolute;
+  top: 100%;
+  left: 10px;
+  margin-top: 10px;
+  background: var(--accent);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  z-index: 50;
+  animation: floatHint 2.5s infinite ease-in-out;
+  pointer-events: none;
+  white-space: nowrap;
+}
+.tooltip-hint::before {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  left: 24px;
+  border-width: 6px;
+  border-style: solid;
+  border-color: transparent transparent var(--accent) transparent;
+}
+@keyframes floatHint {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(3px); }
+}
+
 /* ---------- étape 2 : mes envies ---------- */
 .revwrap{padding:14px 16px 40px;max-width:1300px;margin:0 auto}
 .revgroup{margin-bottom:26px}
@@ -318,8 +349,9 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
     <div id="discoverPane" class="scrollarea">
       <div id="swWrap">
         <div id="swFilters">
-          <div class="fbar">
+          <div class="fbar" style="position:relative">
             <button class="btn sm" id="fToggle">☰ Filtrer</button>
+            <div id="filterTooltip" class="tooltip-hint">Beaucoup de spectacles ? Filtrez par catégorie</div>
             <span class="muted" id="fCount" style="font-size:12px"></span>
             <span class="spacer"></span>
             <select class="sel" id="fOrder" style="font-size:12px">

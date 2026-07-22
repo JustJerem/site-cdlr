@@ -284,7 +284,11 @@ addEventListener('keydown', ev => {
   else if(k === 'Backspace'){ ev.preventDefault(); undoSwipe() }
 });
 
-$('fToggle').onclick = () => $('fPanel').classList.toggle('open');
+$('fToggle').onclick = () => {
+  $('fPanel').classList.toggle('open');
+  const tooltip = $('filterTooltip');
+  if (tooltip) tooltip.style.display = 'none';
+};
 $('fPanel').onclick = ev => {
   const c = ev.target.closest('.chip'); if(!c) return;
   ev.stopPropagation();
