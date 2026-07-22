@@ -39,7 +39,8 @@ const T0=480, T1=1590, PX=1.9, MINH=114, MINMIN=Math.ceil(MINH/PX);
 
 // ---------------------------------------------------------------- état
 const S = {
-  step:'discover', day:DAYS[0], view:'cal', q:'',
+  // sur petit écran l'agenda est le seul mode lisible : 1,5 colonne sur 26 en calendrier
+  step:'discover', day:DAYS[0], view: matchMedia('(max-width:860px)').matches ? 'agenda' : 'cal', q:'',
   types:new Set(), extra:new Set(), hide:false, onlyRanked:false,
   rank:new Map(),                       // url -> -1 | 1 | 2 | 3
   sel:new Set(),                        // index d'événements retenus
@@ -64,6 +65,7 @@ function load(){
       if(d.marges) Object.assign(S.marges, d.marges);
       if(d.speed)  S.speed = d.speed;
       if(d.code)   S.code = d.code;
+      if(d.view && ['agenda','cal','lieu'].includes(d.view)) S.view = d.view;
       return;
     }
     // reprise de l'ancienne version
@@ -78,7 +80,7 @@ function load(){
 const save = () => {
   localStorage.cdlr2026 = JSON.stringify({
     rank:Object.fromEntries(S.rank), sel:[...S.sel].map(i=>KEY(byI.get(i))),
-    days:[...S.days], marges:S.marges, speed:S.speed, code:S.code
+    days:[...S.days], marges:S.marges, speed:S.speed, code:S.code, view:S.view
   });
 };
 const rk = u => S.rank.get(u) || 0;
@@ -415,20 +417,22 @@ const handlePresence = ev => {
 $('presence').onchange = handlePresence;
 $('presence1').onchange = handlePresence;
 $('tabs').onclick = ev => {const b = ev.target.closest('button'); if(b){S.day = b.dataset.d; render()}};
-$('view').onchange = e => {S.view = e.target.value; render()};
+$('view').onchange = e => {S.view = e.target.value; save(); render()};
+$('toolToggle').onclick = () => {
+  const open = $('toolmore').classList.toggle('open');
+  $('toolToggle').textContent = open ? 'Filtres ▴' : 'Filtres ▾';
+};
+$('bottombar').onclick = e => {
+  const b = e.target.closest('button'); if(!b) return;
+  showPane(b.dataset.pane);
+};
+function showPane(p){
+  $('planPane').classList.toggle('showside', p === 'side');
+  document.querySelectorAll('#bottombar button').forEach(b => b.classList.toggle('on', b.dataset.pane === p));
+}
 $('hideBlocked').onclick = () => {S.hide = !S.hide; render()};
 $('onlyRanked').onclick  = () => {S.onlyRanked = !S.onlyRanked; render()};
 $('clearPlan').onclick   = () => {S.sel.clear(); $('report').innerHTML=''; save(); render()};
-$('toggleSide').onclick = () => {
-  const p = $('planPane');
-  if (p.classList.contains('showside')) {
-    p.classList.remove('showside');
-    $('toggleSide').innerHTML = '📋 Ma sélection';
-  } else {
-    p.classList.add('showside');
-    $('toggleSide').innerHTML = '← Calendrier';
-  }
-};
 $('scroll').onscroll = () => {$('axis').style.transform = 'translateY('+(-$('scroll').scrollTop)+'px)'};
 
 document.addEventListener('click', ev => {
@@ -511,9 +515,10 @@ function render(){
       && (!S.onlyRanked || rk(e.u) > 0)).map(e => ({e, s:st.get(e.i)}));
   if(S.hide) evs = evs.filter(o => !['blocked','dup','off','no'].includes(o.s));
 
-  const isCal = S.view !== 'list';
+  const isCal = S.view === 'cal' || S.view === 'lieu';
   $('cal').style.display = isCal ? 'grid' : 'none';
   $('listView').style.display = isCal ? 'none' : 'block';
+  $('listView').classList.toggle('agenda', S.view === 'agenda');
 
   if(isCal){
     const byLieu = S.view === 'lieu';
@@ -547,9 +552,16 @@ function render(){
     $('grid').style.width  = Math.max(total, 300)+'px';
     $('grid').style.height = $('axis').style.height = TOP + (T1-T0)*PX + 70 + 'px';
   } else {
-    $('listView').innerHTML = evs.length
-      ? evs.sort((a,b) => a.e.s-b.e.s).map(o => card(o.e, o.s, restOf(o.e))).join('')
-      : '<p class="muted">Rien ne correspond aux filtres.</p>';
+    // agenda : liste chronologique pleine largeur, une étiquette par heure entamée
+    const sorted = evs.sort((a,b) => a.e.s - b.e.s || a.e.e - b.e.e);
+    let out = '', lastH = -1;
+    for(const o of sorted){
+      const h = Math.floor(o.e.s / 60);
+      if(h !== lastH){ out += `<div class="hourmark">${fmt(h*60)}</div>`; lastH = h }
+      out += card(o.e, o.s, restOf(o.e));
+    }
+    $('listView').innerHTML = sorted.length ? out
+      : `<p class="empty muted">Rien ne correspond aux filtres de cette journée.</p>`;
   }
 
   const free = evs.filter(o => o.s === 'free').length, tight = evs.filter(o => o.s === 'tight').length;
@@ -561,6 +573,8 @@ function render(){
     + ` · ${open}/${spec.length} spectacles encore accessibles`
     + ` · ★ ${nRank.filter(v=>v===3).length} ♥ ${nRank.filter(v=>v===2).length} ? ${nRank.filter(v=>v===1).length} ✕ ${nRank.filter(v=>v===-1).length}`;
 
+  $('view').value = S.view;
+  $('bbCount').textContent = sel.length ? `(${sel.length})` : '';
   drawSide(sel);
   $('legend').innerHTML = `Écart nécessaire = <b>temps de marche</b> + <b>avance selon la jauge</b>
     (${TIERS.map(t=>`${t.lbl.replace('Jauge ','')} : ${dur(S.marges[t.id])}`).join(' · ')}), réglable dans ⚙︎.<br>
@@ -790,8 +804,7 @@ function buildPlan(){
         : '')
     + `<br><span class="muted">Ajuste ensuite à la main : tes clics restent prioritaires à la prochaine génération.</span>`;
 
-  $('planPane').classList.add('showside');
-  $('toggleSide').innerHTML = '← Calendrier';
+  showPane('side');
 }
 $('build').onclick = buildPlan;
 

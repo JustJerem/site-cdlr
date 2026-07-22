@@ -171,9 +171,15 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
   background:var(--bg);padding:6px 0;z-index:2}
 .revhead .dot{width:9px;height:9px;border-radius:50%}
 .revhead h2{margin:0;font-size:14px;font-weight:650}
-.revgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+/* minmax(0,…) : sans ça une piste 1fr ne descend pas sous la largeur mini de son contenu
+   et les cartes débordaient de 99 px sur iPhone mini */
+.revgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:10px}
 .rcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:10px;
-  display:flex;gap:10px;box-shadow:var(--shadow)}
+  display:flex;gap:10px;box-shadow:var(--shadow);min-width:0}
+.rcard .tags{min-width:0}
+/* certaines durées sont des phrases entières (« Épisode 1 : 55 min Épisode 2 : … ») */
+.rcard .tag{white-space:normal;overflow-wrap:anywhere;line-height:1.35}
+.rcard b,.rcard b a{overflow-wrap:anywhere}
 .rcard img{width:64px;height:64px;object-fit:cover;border-radius:7px;background:var(--surface2);flex:0 0 auto}
 .rcard .meta{min-width:0;flex:1}
 .rcard b{display:block;font-size:13px;line-height:1.25;font-weight:650}
@@ -182,7 +188,7 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .rcard .tags{display:flex;gap:3px;flex-wrap:wrap}
 
 /* ---------- sauvegarde par code ---------- */
-#syncBox{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;margin-top:30px;
+#syncBox{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(290px,100%),1fr));gap:12px;margin-top:30px;
   border-top:1px solid var(--line);padding-top:22px}
 .synccard.friend{border-color:var(--maybe)}
 .synccard.friend h3{color:var(--maybe)}
@@ -246,7 +252,23 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
   text-overflow:ellipsis;color:var(--ink3)}
 .hcell b{color:var(--ink)}
 #listView{flex:1 1 auto;min-height:0;overflow:auto;padding:12px 16px 40px}
-#listView .ev{position:static!important;width:auto!important;height:auto!important;margin-bottom:6px}
+/* relative et non static : les boutons ⊘/♥ sont en absolu et doivent rester dans leur carte */
+#listView .ev{position:relative!important;left:auto!important;top:auto!important;
+  width:auto!important;height:auto!important;margin-bottom:6px}
+/* vue agenda : liste chronologique pleine largeur, séparateurs d'heure */
+#listView.agenda{padding:0 12px 60px}
+.agenda .hourmark{position:sticky;top:0;z-index:3;background:var(--bg);padding:9px 0 5px;
+  font-size:12px;font-weight:700;color:var(--ink2);border-bottom:1px solid var(--line);margin-bottom:7px}
+.agenda .ev{padding:11px 13px;border-radius:12px;margin-bottom:8px}
+.agenda .ev b{-webkit-line-clamp:3;font-size:14.5px}
+.agenda .ev i{font-size:12.5px;white-space:normal}
+.agenda .ev .h{font-size:12px;font-weight:600;color:var(--ink2)}
+.agenda .ev .badges{margin-top:6px;white-space:normal}
+.agenda .evbtn{width:42px;height:42px;line-height:41px;font-size:15px;opacity:1}
+.agenda .evbtn.b1{right:8px;top:8px}
+.agenda .evbtn.b2{right:56px;top:8px}
+.agenda .ev b,.agenda .ev .h{padding-right:100px}
+.agenda .empty{padding:24px 4px;color:var(--ink3)}
 .statbar{flex:0 0 auto;font-size:11.5px;color:var(--ink3);padding:5px 16px;border-top:1px solid var(--line);
   background:var(--surface);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
@@ -330,6 +352,10 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 #swipe #swWrap{max-height:calc(100dvh - 24px);min-height:0}
 #swipe #swCard{flex:1 1 auto;min-height:0}
 
+/* ---------- barre d'outils repliable + barre du bas ---------- */
+.toolmore{display:contents}
+.bottombar{display:none}
+
 /* ---------- mobile ---------- */
 .mobonly{display:none}
 /* « screen and » est indispensable : une page A4 fait ~794 px, sans ça les règles
@@ -337,14 +363,44 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 @media screen and (max-width:860px){
   .mobonly{display:flex}
   .desktoponly{display:none!important}
-  .topbar{padding:8px 12px;gap:9px}
+  .topbar{padding:5px 12px 6px;gap:6px}
+  .brand{font-size:13px}
   .brand span{display:none}
   .steps{width:100%;order:3}
-  .steps button{flex:1;justify-content:center;padding:8px 4px;font-size:12px}
-  .toolbar{padding:7px 10px;gap:6px}
+  .steps button{flex:1;justify-content:center;padding:9px 4px;font-size:12px;min-height:44px}
+  .toolbar{padding:6px 10px;gap:6px}
   .toolbar .field>label{display:none}
-  .toolbar .btn,.toolbar .chip,.toolbar .sel{font-size:12px;padding:5px 9px}
-  .statbar{font-size:10.5px;padding:4px 10px}
+  .statbar{display:none}                    /* info tronquée et peu utile sur petit écran */
+
+  /* barre d'outils : une ligne de jours + une ligne d'actions, le reste dans « Filtres » */
+  .dayfield{flex:1 1 100%;order:1}
+  .dayfield .steps{width:100%}
+  .dayfield .steps button{flex:1;padding:9px 2px;font-size:12.5px;min-height:44px}
+  #build{order:2;flex:1;justify-content:center;min-height:44px}
+  #toolToggle{order:3;min-height:44px}
+  #openSettings2{order:4;min-height:44px;min-width:44px;justify-content:center}
+  .toolmore{display:none;order:5;flex:1 1 100%;flex-wrap:wrap;gap:7px;
+    border-top:1px solid var(--line);padding-top:8px;margin-top:2px}
+  .toolmore.open{display:flex}
+  .toolmore .field{flex-wrap:wrap}
+
+  /* cibles tactiles : 44 px minimum (recommandation Apple) */
+  .btn,.chip,.sel,select,input[type=search],input[type=text]{min-height:44px}
+  .btn.sm{min-height:36px}
+  .rank button{min-height:44px;min-width:46px;font-size:14px}
+  .pick .x,.modalx{width:44px;height:44px;line-height:42px;font-size:17px;text-align:center}
+  #presence label{min-height:44px;padding:0 4px;gap:6px}
+  #presence input{width:22px;height:22px}
+  .sugg summary{padding:11px 0}
+  .synccard .btn,#codeIn,#friendIn{min-height:46px}
+
+  /* barre du bas : bascule programme / ma sélection, au pouce */
+  .bottombar{display:flex;flex:0 0 auto;background:var(--surface);border-top:1px solid var(--line);
+    padding-bottom:env(safe-area-inset-bottom)}
+  .bottombar button{flex:1;background:none;border:0;padding:11px 6px;font-size:12.5px;font-weight:600;
+    color:var(--ink3);cursor:pointer;min-height:52px;border-top:2px solid transparent}
+  .bottombar button.on{color:var(--accent);border-top-color:var(--accent)}
+  #bbCount{font-weight:700}
   #planPane{grid-template-columns:1fr}
   #planPane>#side{display:none;border-left:0}
   #planPane.showside>#calWrap{display:none}
@@ -355,7 +411,11 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
   .modal{padding:0}
   .modalbox{width:100%;height:100dvh;max-height:100dvh;border-radius:0;border:0}
   #discoverPane{padding:0;align-items:stretch}
-  #swWrap{gap:0;height:100%}
+  #swWrap{gap:0;height:100%;width:100%}
+  .frow>.lbl:first-child{flex:0 0 100%}
+  .step{overflow-x:hidden}
+  .tooltip-hint{left:8px;right:8px;max-width:none}   /* débordait de 14 px à 320 px */
+  .synccard{min-width:0}
   #swFilters{border-radius:0;border-left:0;border-right:0;box-shadow:none}
   #swCard{border-radius:0;border-left:0;border-right:0}
   #swipe{padding:0}
@@ -506,17 +566,19 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
   <!-- ÉTAPE 3 -->
   <section class="step" id="step-plan">
     <div class="toolbar">
-      <div class="field"><label>J'y suis</label><span class="field" id="presence"></span></div>
+      <div class="field dayfield"><label>Jour</label><span class="steps" id="tabs" style="padding:2px"></span></div>
       <button class="btn primary" id="build">⚡ Générer</button>
-      <span class="spacer desktoponly"></span>
-      <div class="field"><label>Jour</label><span class="steps" id="tabs" style="padding:2px"></span></div>
-      <div class="field"><label>Vue</label>
-        <select class="sel" id="view"><option value="cal">Calendrier</option><option value="lieu">Par lieu</option><option value="list">Liste</option></select>
-      </div>
-      <span class="chip" id="hideBlocked">Masquer les indispos</span>
-      <span class="chip" id="onlyRanked">Mes envies seules</span>
-      <button class="btn mobonly" id="toggleSide">📋 Ma sélection</button>
+      <button class="btn mobonly" id="toolToggle">Filtres ▾</button>
       <button class="btn mobonly" id="openSettings2">⚙︎</button>
+      <span class="spacer desktoponly"></span>
+      <div class="toolmore" id="toolmore">
+        <div class="field"><label>J'y suis</label><span class="field" id="presence"></span></div>
+        <div class="field"><label>Vue</label>
+          <select class="sel" id="view"><option value="agenda">Agenda</option><option value="cal">Calendrier</option><option value="lieu">Par lieu</option></select>
+        </div>
+        <span class="chip" id="hideBlocked">Masquer les indispos</span>
+        <span class="chip" id="onlyRanked">Mes envies seules</span>
+      </div>
     </div>
     <div id="planPane">
       <div id="calWrap">
@@ -536,6 +598,10 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
         <p class="muted" style="font-size:11.5px;line-height:1.6;margin-top:18px" id="legend"></p>
       </aside>
     </div>
+    <nav class="bottombar mobonly" id="bottombar">
+      <button data-pane="cal" class="on">🗓 Programme</button>
+      <button data-pane="side">📋 Ma sélection <span id="bbCount"></span></button>
+    </nav>
   </section>
 </main>
 
@@ -573,6 +639,6 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 </div></div>
 
 <script src="data.js?v=5"></script>
-<script src="app.js?v=10"></script>
+<script src="app.js?v=13"></script>
 </body>
 </html>
