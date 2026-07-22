@@ -283,33 +283,7 @@ addEventListener('keydown', ev => {
   else if(k === ' '){ ev.preventDefault(); decide('skip') }
   else if(k === 'Backspace'){ ev.preventDefault(); undoSwipe() }
 });
-// glisser : droite ♥ · gauche ✕ · haut ★ · bas ?
-(() => {
-  const c = $('swCard'); let x0=null, y0=0, dx=0, dy=0;
-  c.addEventListener('pointerdown', e => {
-    if(e.target.closest('button,a')) return;
-    x0=e.clientX; y0=e.clientY; dx=dy=0; c.setPointerCapture(e.pointerId); c.style.transition='';
-  });
-  c.addEventListener('pointermove', e => {
-    if(x0 === null) return;
-    dx = e.clientX-x0; dy = e.clientY-y0;
-    const vert = Math.abs(dy) > Math.abs(dx);
-    const v = vert ? (dy<0 ? 3 : 1) : (dx>0 ? 2 : -1);
-    const amt = vert ? Math.abs(dy) : Math.abs(dx);
-    c.style.transform = vert ? `translateY(${dy}px)` : `translateX(${dx}px) rotate(${dx/28}deg)`;
-    const st = $('swStamp'), L = LV[v];
-    st.textContent = L.ico+' '+L.short.toUpperCase();
-    st.style.background = L.col; st.style.opacity = Math.min(1, amt/110);
-  });
-  c.addEventListener('pointerup', () => {
-    if(x0 === null) return;
-    const X=dx, Y=dy; x0=null;
-    const vert = Math.abs(Y) > Math.abs(X);
-    if(vert && Math.abs(Y) > 110) decide(Y<0 ? 3 : 1);
-    else if(!vert && Math.abs(X) > 110) decide(X>0 ? 2 : -1);
-    else { c.style.transition='transform .18s'; c.style.transform=''; $('swStamp').style.opacity=0 }
-  });
-})();
+
 $('fToggle').onclick = () => $('fPanel').classList.toggle('open');
 $('fPanel').onclick = ev => {
   const c = ev.target.closest('.chip'); if(!c) return;
