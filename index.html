@@ -182,8 +182,25 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .rcard .tags{display:flex;gap:3px;flex-wrap:wrap}
 
 /* ---------- sauvegarde par code ---------- */
-#syncBox{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:30px;
+#syncBox{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:12px;margin-top:30px;
   border-top:1px solid var(--line);padding-top:22px}
+.synccard.friend{border-color:var(--maybe)}
+.synccard.friend h3{color:var(--maybe)}
+.synccard.friend #friendIn:focus{outline-color:var(--maybe)}
+#friendOut{grid-column:1/-1}
+.matchhead{background:var(--accent-soft);border:1px solid var(--accent);border-radius:9px;
+  padding:10px 13px;margin-top:10px;font-size:12.5px;line-height:1.55}
+.matchhead b{font-size:15px}
+.match{display:flex;gap:10px;align-items:center;background:var(--surface);border:1px solid var(--line);
+  border-radius:9px;padding:8px 10px;margin-top:6px}
+.match img{width:46px;height:46px;object-fit:cover;border-radius:6px;background:var(--surface2);flex:0 0 auto}
+.match .m{flex:1;min-width:0}
+.match b{display:block;font-size:13px;line-height:1.25}
+.match small{display:block;color:var(--ink3);font-size:11.5px;line-height:1.45}
+.duo{display:inline-flex;gap:4px;align-items:center;font-size:11px;white-space:nowrap}
+.duo i{font-style:normal;font-weight:700;padding:1px 5px;border-radius:5px;color:#fff}
+.matchgrp{margin-top:14px}
+.matchgrp>h4{margin:0 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink3)}
 .synccard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
   padding:14px 16px;box-shadow:var(--shadow)}
 .synccard h3{margin:0 0 6px;font-size:14px;font-weight:650}
@@ -449,13 +466,24 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
         </div>
         <div class="synccard">
           <h3>↺ Récupérer avec un code</h3>
-          <p>Tu as déjà trié tes spectacles ailleurs ? Tape le code reçu et tout revient :
-             envies, jours de présence, réglages et planning.</p>
+          <p>Tu as déjà trié tes spectacles ailleurs ? Tape ton code et tout revient :
+             envies, jours de présence, réglages et planning.
+             <b>Attention : ça remplace ce qui est sur cet appareil.</b></p>
           <div class="codeline">
             <input id="codeIn" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="00-00-00">
             <button class="btn" id="doLoad">Récupérer</button>
           </div>
           <div id="loadOut"></div>
+        </div>
+        <div class="synccard friend">
+          <h3>👥 Comparer avec un ami</h3>
+          <p>Un ami t’a passé son code ? Tape-le pour voir les spectacles que vous voulez
+             voir tous les deux. <b>Rien n’est modifié chez toi</b>, c’est juste une comparaison.</p>
+          <div class="codeline">
+            <input id="friendIn" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="00-00-00">
+            <button class="btn" id="doFriend">Comparer</button>
+          </div>
+          <div id="friendOut"></div>
         </div>
       </section>
     </div></div>
@@ -521,6 +549,6 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 </div></div>
 
 <script src="data.js?v=5"></script>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=9"></script>
 </body>
 </html>

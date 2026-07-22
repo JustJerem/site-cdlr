@@ -906,8 +906,108 @@ async function cloudLoad(){
     out.innerHTML = `<div class="msg err">${esc(e.message === 'format' ? 'Sauvegarde illisible.' : netMsg(e))}</div>`;
   }finally{ btn.disabled = false }
 }
+/* Comparaison avec la sauvegarde d'un ami. Lecture seule : rien n'est modifié chez soi
+   tant qu'on ne clique pas explicitement sur « ajouter à mes envies ». */
+async function friendCompare(){
+  const out = $('friendOut'), btn = $('doFriend');
+  const c = cleanCode($('friendIn').value);
+  if(c.length !== 6){
+    out.innerHTML = `<div class="msg err">Le code de ton ami fait 6 chiffres, par exemple 48-15-02.</div>`;
+    return;
+  }
+  if(c === S.code){
+    out.innerHTML = `<div class="msg info">C’est ton propre code — demande le sien à ton ami.</div>`;
+    return;
+  }
+  if(!S.rank.size){
+    out.innerHTML = `<div class="msg info">Trie d’abord quelques spectacles, sinon il n’y a rien à comparer.</div>`;
+    return;
+  }
+  btn.disabled = true; out.innerHTML = `<div class="msg info">Recherche…</div>`;
+  try{
+    const r = await aw('GET', `${AW.rows}/${c}`);
+    if(r.status === 404){
+      out.innerHTML = `<div class="msg err">Aucune sauvegarde pour le code ${showCode(c)}.</div>`;
+      return;
+    }
+    if(!r.ok) throw new Error('http '+r.status);
+    const d = JSON.parse(r.j.payload);
+    out.innerHTML = renderMatch(d, c);
+  }catch(e){
+    out.innerHTML = `<div class="msg err">${esc(netMsg(e))}</div>`;
+  }finally{ btn.disabled = false }
+}
+function renderMatch(d, code){
+  const his = new Map(Object.entries(d.rank || {})
+    .filter(([u,v]) => [3,2,1,-1].includes(+v)).map(([u,v]) => [u, +v]));
+  const hisDays = new Set((d.days || DAYS).filter(x => DAYS.includes(x)));
+  const common = DAYS.filter(x => S.days.has(x) && hisDays.has(x));
+
+  const seances = u => repsOf(u).filter(e => common.includes(e.d));
+  const line = (u, mine, theirs, withAdd) => {
+    const e0 = repsOf(u)[0], sh = SH[u] || {}, ss = seances(u);
+    const pill = (v, who) => v > 0
+      ? `<span class="duo">${who}<i style="background:${LV[v].col}">${LV[v].ico}</i></span>`
+      : `<span class="duo">${who}<i style="background:var(--ink3)">·</i></span>`;
+    return `<div class="match">
+      ${sh.img ? `<img src="${sh.img}" alt="" loading="lazy">` : ''}
+      <div class="m">
+        <b><a href="${u}" target="_blank" rel="noopener">${esc(e0.t)}</a></b>
+        <small>${esc(e0.c)} · ${e0.ty.join(', ')}${e0.j ? ` · jauge ${e0.j}` : ''}</small>
+        <small>${pill(mine,'toi ')} ${pill(theirs,'lui/elle ')}
+          · ${ss.length ? `${ss.length} séance${ss.length>1?'s':''} sur vos jours communs :
+              ${ss.slice(0,4).map(e => DAYNAME[e.d]+' '+fmt(e.s)).join(', ')}`
+            : `<span style="color:var(--warn)">aucune séance sur vos jours communs</span>`}</small>
+      </div>
+      ${withAdd ? `<button class="btn sm" data-adopt="${esc(u)}" data-lv="${theirs}">+ Mes envies</button>` : ''}
+    </div>`;
+  };
+
+  const known = u => repsOf(u).length > 0;   // l'ami peut avoir une version différente du programme
+  // ceux que vous pouvez réellement voir ensemble d'abord, puis par envie cumulée
+  const rankSort = (a,b) => (seances(b[0]).length > 0) - (seances(a[0]).length > 0)
+    || (b[1] + (his.get(b[0])||0)) - (a[1] + (his.get(a[0])||0))
+    || repsOf(a[0])[0].t.localeCompare(repsOf(b[0])[0].t);
+  const both = [...S.rank].filter(([u,v]) => v > 0 && (his.get(u) || 0) > 0 && known(u)).sort(rankSort);
+  const onlyHim = [...his].filter(([u,v]) => v > 0 && !rk(u) && known(u))
+    .sort((a,b) => (seances(b[0]).length > 0) - (seances(a[0]).length > 0) || b[1] - a[1]).slice(0, 12);
+  const faisables = both.filter(([u]) => seances(u).length > 0).length;
+
+  const jours = common.length
+    ? common.map(x => DAYNAME[x]).join(', ')
+    : '<span style="color:var(--bad)">aucun jour de présence en commun</span>';
+
+  let html = `<div class="matchhead">
+      <b>${both.length} spectacle${both.length>1?'s':''} en commun</b> avec le code ${showCode(code)}.<br>
+      Jours où vous êtes là tous les deux : ${jours}.
+      ${both.length ? `<br>${faisables} que vous pouvez voir ensemble${
+          both.length - faisables ? `, ${both.length - faisables} sans séance sur vos jours communs (en bas de liste)` : ''}.` : ''}
+    </div>`;
+
+  if(both.length) html += `<div class="matchgrp">`
+    + both.map(([u,v]) => line(u, v, his.get(u), false)).join('') + `</div>`;
+  else html += `<div class="msg info">Vos listes ne se croisent pas encore. Regardez ci-dessous ce qui l’intéresse.</div>`;
+
+  if(onlyHim.length) html += `<div class="matchgrp"><h4>Ce qui lui plaît et que tu n’as pas classé</h4>`
+    + onlyHim.map(([u,v]) => line(u, 0, v, true)).join('') + `</div>`;
+
+  return html;
+}
+$('friendOut').addEventListener('click', ev => {
+  const b = ev.target.closest('[data-adopt]'); if(!b) return;
+  setRank(b.dataset.adopt, +b.dataset.lv || 1);
+  b.outerHTML = `<span class="tag" style="background:var(--ok-soft);color:var(--ok)">ajouté ✓</span>`;
+  drawReview(); render();
+});
 $('doSave').onclick = cloudSave;
 $('doLoad').onclick = cloudLoad;
+$('doFriend').onclick = friendCompare;
+$('friendIn').oninput = e => {
+  const c = cleanCode(e.target.value);
+  e.target.value = c.length > 4 ? showCode(c.padEnd(6,'')).replace(/-$/,'')
+                 : c.length > 2 ? c.slice(0,2)+'-'+c.slice(2) : c;
+};
+$('friendIn').onkeydown = e => {if(e.key === 'Enter') friendCompare()};
 $('codeIn').oninput = e => {
   const c = cleanCode(e.target.value);
   e.target.value = c.length > 4 ? showCode(c.padEnd(6,'')).replace(/-$/,'')
@@ -948,7 +1048,7 @@ $('closeSettings').onclick = closeSet;
 $('settings').onclick = e => {if(e.target.id === 'settings') closeSet()};
 
 // ---------------------------------------------------------------- démarrage
-window.APP = {S, SW, LV, TIERS, link, avance, walk, status, selected, suggestions, buildPlan, render, go, save, load, setRank, rk, fmt, dur, venue, venueLine, byI, repsOf, drawSwipe, drawReview, drawFilterBar, buildSwipeList, decide, undoSwipe, cloudSave, cloudLoad, snapshot, applySnapshot, showCode, cleanCode, AW, countTight, deTighten, chances};
+window.APP = {S, SW, LV, TIERS, link, avance, walk, status, selected, suggestions, buildPlan, render, go, save, load, setRank, rk, fmt, dur, venue, venueLine, byI, repsOf, drawSwipe, drawReview, drawFilterBar, buildSwipeList, decide, undoSwipe, cloudSave, cloudLoad, snapshot, applySnapshot, showCode, cleanCode, AW, countTight, deTighten, chances, friendCompare, renderMatch};
 load();
 render();
 go(S.rank.size ? (S.sel.size ? 'plan' : 'review') : 'discover');
