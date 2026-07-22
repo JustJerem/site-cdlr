@@ -403,8 +403,16 @@ $('view').onchange = e => {S.view = e.target.value; render()};
 $('hideBlocked').onclick = () => {S.hide = !S.hide; render()};
 $('onlyRanked').onclick  = () => {S.onlyRanked = !S.onlyRanked; render()};
 $('clearPlan').onclick   = () => {S.sel.clear(); $('report').innerHTML=''; save(); render()};
-$('toggleSide').onclick  = () => {$('planPane').classList.add('showside')};
-$('backToCal').onclick   = () => {$('planPane').classList.remove('showside')};
+$('toggleSide').onclick = () => {
+  const p = $('planPane');
+  if (p.classList.contains('showside')) {
+    p.classList.remove('showside');
+    $('toggleSide').innerHTML = '📋 Ma sélection';
+  } else {
+    p.classList.add('showside');
+    $('toggleSide').innerHTML = '← Calendrier';
+  }
+};
 $('scroll').onscroll = () => {$('axis').style.transform = 'translateY('+(-$('scroll').scrollTop)+'px)'};
 
 document.addEventListener('click', ev => {
@@ -699,6 +707,9 @@ function buildPlan(){
           + ` Réduis l’avance demandée dans ⚙︎ pour en récupérer.</span>`
         : '')
     + `<br><span class="muted">Ajuste ensuite à la main : tes clics restent prioritaires à la prochaine génération.</span>`;
+
+  $('planPane').classList.add('showside');
+  $('toggleSide').innerHTML = '← Calendrier';
 }
 $('build').onclick = buildPlan;
 
