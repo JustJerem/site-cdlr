@@ -651,7 +651,7 @@ function drawSide(sel){
       <b><a href="${e.u}" target="_blank" rel="noopener">${esc(e.t)}</a></b>
       <small>${fmt(e.s)}–${fmt(e.e)} · ${esc(e.c)}</small>
       <small>📍 <span class="venue">${esc(v.name)}</span>${v.addr && v.addr!==v.name ? ` — ${esc(v.addr)}` : ''}
-        ${v.lat ? `<a href="https://www.openstreetmap.org/?mlat=${v.lat}&mlon=${v.lon}#map=18/${v.lat}/${v.lon}" target="_blank" rel="noopener">(carte)</a>` : ''}
+        ${v.lat ? `<a href="https://www.google.com/maps/search/?api=1&query=${v.lat},${v.lon}" target="_blank" rel="noopener">(carte)</a>` : ''}
         · pastille ${e.p}</small>
       ${e.j ? `<small>Jauge ${e.j} · arriver vers <b>${fmt(e.s-avance(e))}</b></small>` : ''}</div>`;
     if(!nextSameDay) out += suggBlock(e, null, e.d, 'après celui-ci');
