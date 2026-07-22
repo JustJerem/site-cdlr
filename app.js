@@ -908,35 +908,49 @@ async function cloudLoad(){
 }
 /* Comparaison avec la sauvegarde d'un ami. Lecture seule : rien n'est modifié chez soi
    tant qu'on ne clique pas explicitement sur « ajouter à mes envies ». */
+const openMatch  = () => $('matchModal').classList.add('on');
+const closeMatch = () => $('matchModal').classList.remove('on');
+
 async function friendCompare(){
-  const out = $('friendOut'), btn = $('doFriend');
+  const msg = $('friendMsg'), btn = $('doFriend');
   const c = cleanCode($('friendIn').value);
+  // les messages courts restent sous le champ ; seul le résultat mérite la pop-up
   if(c.length !== 6){
-    out.innerHTML = `<div class="msg err">Le code de ton ami fait 6 chiffres, par exemple 48-15-02.</div>`;
+    msg.innerHTML = `<div class="msg err">Le code de ton ami fait 6 chiffres, par exemple 48-15-02.</div>`;
     return;
   }
   if(c === S.code){
-    out.innerHTML = `<div class="msg info">C’est ton propre code — demande le sien à ton ami.</div>`;
+    msg.innerHTML = `<div class="msg info">C’est ton propre code — demande le sien à ton ami.</div>`;
     return;
   }
   if(!S.rank.size){
-    out.innerHTML = `<div class="msg info">Trie d’abord quelques spectacles, sinon il n’y a rien à comparer.</div>`;
+    msg.innerHTML = `<div class="msg info">Trie d’abord quelques spectacles, sinon il n’y a rien à comparer.</div>`;
     return;
   }
-  btn.disabled = true; out.innerHTML = `<div class="msg info">Recherche…</div>`;
+  btn.disabled = true; msg.innerHTML = `<div class="msg info">Recherche…</div>`;
   try{
     const r = await aw('GET', `${AW.rows}/${c}`);
     if(r.status === 404){
-      out.innerHTML = `<div class="msg err">Aucune sauvegarde pour le code ${showCode(c)}.</div>`;
+      msg.innerHTML = `<div class="msg err">Aucune sauvegarde pour le code ${showCode(c)}.</div>`;
       return;
     }
     if(!r.ok) throw new Error('http '+r.status);
     const d = JSON.parse(r.j.payload);
-    out.innerHTML = renderMatch(d, c);
+    $('friendOut').innerHTML = renderMatch(d, c);
+    $('friendOut').scrollTop = 0;
+    msg.innerHTML = `<div class="msg ok">Comparaison avec ${showCode(c)} —
+      <a href="#" id="reopenMatch">rouvrir le résultat</a></div>`;
+    const a = $('reopenMatch'); if(a) a.onclick = e => {e.preventDefault(); openMatch()};
+    openMatch();
   }catch(e){
-    out.innerHTML = `<div class="msg err">${esc(netMsg(e))}</div>`;
+    msg.innerHTML = `<div class="msg err">${esc(netMsg(e))}</div>`;
   }finally{ btn.disabled = false }
 }
+$('matchClose').onclick = closeMatch;
+$('matchModal').onclick = e => {if(e.target.id === 'matchModal') closeMatch()};
+addEventListener('keydown', e => {
+  if(e.key === 'Escape' && $('matchModal').classList.contains('on')) closeMatch();
+});
 function renderMatch(d, code){
   const his = new Map(Object.entries(d.rank || {})
     .filter(([u,v]) => [3,2,1,-1].includes(+v)).map(([u,v]) => [u, +v]));
@@ -1037,7 +1051,9 @@ $('resetAll').onclick = () => {
   if(!confirm('Effacer toutes tes envies, ton planning et tes réglages ?')) return;
   S.rank.clear(); S.sel.clear(); S.days = new Set(DAYS); S.code = '';
   TIERS.forEach(t => S.marges[t.id] = t.def); S.speed = 4.2;
-  $('saveOut').innerHTML = ''; $('loadOut').innerHTML = ''; $('codeIn').value = '';
+  ['saveOut','loadOut','friendMsg','friendOut'].forEach(i => $(i).innerHTML = '');
+  ['codeIn','friendIn'].forEach(i => $(i).value = '');
+  closeMatch();
   save(); drawSettings(); go('discover'); render();
 };
 const openSet  = () => {drawSettings(); $('settings').classList.add('on')};

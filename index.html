@@ -187,7 +187,19 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .synccard.friend{border-color:var(--maybe)}
 .synccard.friend h3{color:var(--maybe)}
 .synccard.friend #friendIn:focus{outline-color:var(--maybe)}
-#friendOut{grid-column:1/-1}
+/* pop-up de comparaison */
+.modal{position:fixed;inset:0;z-index:130;background:rgba(10,10,14,.6);display:none;
+  align-items:center;justify-content:center;padding:16px}
+.modal.on{display:flex}
+.modalbox{background:var(--bg);border:1px solid var(--line);border-radius:14px;box-shadow:0 24px 70px rgba(0,0,0,.35);
+  width:min(720px,100%);max-height:min(86vh,86dvh);display:flex;flex-direction:column;overflow:hidden}
+.modalhead{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:13px 16px;
+  border-bottom:1px solid var(--line);background:var(--surface)}
+.modalhead h2{margin:0;font-size:15px;font-weight:650;flex:1}
+.modalx{width:34px;height:34px;flex:0 0 auto;border:1px solid var(--line2);background:var(--surface);
+  border-radius:9px;font-size:15px;cursor:pointer}
+.modalx:hover{background:var(--surface2)}
+.modalbody{flex:1 1 auto;min-height:0;overflow:auto;padding:14px 16px 20px;overscroll-behavior:contain}
 .matchhead{background:var(--accent-soft);border:1px solid var(--accent);border-radius:9px;
   padding:10px 13px;margin-top:10px;font-size:12.5px;line-height:1.55}
 .matchhead b{font-size:15px}
@@ -340,6 +352,8 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
   .revwrap{padding:12px 12px 40px}
   .revgrid{grid-template-columns:1fr}
   #syncBox{grid-template-columns:1fr}
+  .modal{padding:0}
+  .modalbox{width:100%;height:100dvh;max-height:100dvh;border-radius:0;border:0}
   #discoverPane{padding:0;align-items:stretch}
   #swWrap{gap:0;height:100%}
   #swFilters{border-radius:0;border-left:0;border-right:0;box-shadow:none}
@@ -483,7 +497,7 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
             <input id="friendIn" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="00-00-00">
             <button class="btn" id="doFriend">Comparer</button>
           </div>
-          <div id="friendOut"></div>
+          <div id="friendMsg"></div>
         </div>
       </section>
     </div></div>
@@ -525,6 +539,16 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
   </section>
 </main>
 
+<div class="modal" id="matchModal">
+  <div class="modalbox">
+    <header class="modalhead">
+      <h2>👥 Vos envies en commun</h2>
+      <button class="modalx" id="matchClose" title="Fermer">✕</button>
+    </header>
+    <div class="modalbody" id="friendOut"></div>
+  </div>
+</div>
+
 <div class="drawer" id="settings"><div class="inner">
   <h2>Réglages</h2>
   <p class="muted" style="font-size:12px;margin:0 0 14px">
@@ -549,6 +573,6 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 </div></div>
 
 <script src="data.js?v=5"></script>
-<script src="app.js?v=9"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>
