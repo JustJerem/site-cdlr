@@ -45,7 +45,7 @@ const S = {
   sel:new Set(),                        // index d'événements retenus
   days:new Set(DAYS),
   marges:Object.fromEntries(TIERS.map(t=>[t.id,t.def])),
-  speed:4.2,
+  speed:4.2, code:'',
   revNone:false, revNo:false
 };
 const SW = {list:[], k:0, hist:[], dur:0, jauge:0, order:'rare', busy:false};
@@ -63,6 +63,7 @@ function load(){
       if(d.days && d.days.length) S.days = new Set(d.days.filter(x => DAYS.includes(x)));
       if(d.marges) Object.assign(S.marges, d.marges);
       if(d.speed)  S.speed = d.speed;
+      if(d.code)   S.code = d.code;
       return;
     }
     // reprise de l'ancienne version
@@ -77,7 +78,7 @@ function load(){
 const save = () => {
   localStorage.cdlr2026 = JSON.stringify({
     rank:Object.fromEntries(S.rank), sel:[...S.sel].map(i=>KEY(byI.get(i))),
-    days:[...S.days], marges:S.marges, speed:S.speed
+    days:[...S.days], marges:S.marges, speed:S.speed, code:S.code
   });
 };
 const rk = u => S.rank.get(u) || 0;
@@ -127,6 +128,16 @@ function link(a, b){
   return {lvl:'bad', walk:w, short:a.e-lastDep};
 }
 const worse = (x,y) => ['free','ok','warn','bad'].indexOf(x) > ['free','ok','warn','bad'].indexOf(y) ? x : y;
+
+/* En retard, la jauge décide : plus la salle est grande, plus il reste des places à l'arrivée. */
+function chances(e){
+  const j = e.j;
+  if(!j)      return 'Jauge non annoncée — souvent en extérieur, sans limite stricte : ça devrait passer.';
+  if(j > 800) return `Jauge ${j} : très grande, tu devrais entrer sans difficulté même en retard.`;
+  if(j > 400) return `Jauge ${j} : correcte, ça devrait passer.`;
+  if(j > 200) return `Jauge ${j} : moyenne, il peut ne plus y avoir de place.`;
+  return `Jauge ${j} : petite, tu risques de rester dehors. Vois s’il existe une autre séance.`;
+}
 
 const selected = () => [...S.sel].map(i => byI.get(i))
   .sort((a,b) => a.d.localeCompare(b.d) || a.s-b.s || a.e-b.e);
@@ -347,6 +358,10 @@ function drawReview(){
       S.rank.clear(); save(); drawReview();
     }
   };
+  if(S.code && !$('saveOut').innerHTML)
+    $('saveOut').innerHTML = `<div class="msg info">Ton code : <b>${showCode(S.code)}</b>.
+      « Sauvegarder » mettra à jour cette sauvegarde au lieu d’en créer une nouvelle.</div>`;
+  $('doSave').textContent = S.code ? 'Mettre à jour ma sauvegarde' : 'Sauvegarder';
 }
 const emptyGroup = g => `<div class="revgroup"><div class="revhead">
     <span class="dot" style="background:${LV[g].col}"></span><h2>${LV[g].ico} ${LV[g].lbl}</h2>
@@ -639,6 +654,7 @@ function drawSide(sel){
               ? `<span class="k">${dur(gap)}</span> disponibles → <span class="k">${dur(L.slack)}</span> de battement réel<br>départ conseillé <span class="k">${fmt(L.dep)}</span>`
               : L.lvl === 'warn'
               ? `Serré : tu arrives à ${fmt(L.arr)}, soit ${dur(L.late)} après l’heure conseillée — mais avant le début (${fmt(e.s)}). Pars dès la fin, à ${fmt(L.dep)}.`
+                + `<br>${chances(e)}`
               : L.overlap != null
               ? `<b>Impossible</b> : les deux se chevauchent de ${dur(L.overlap)}.`
               : `<b>Impossible</b> : tu arrives à ${fmt(prev.e + L.walk)}, soit ${dur(L.short)} après le début.`)
@@ -662,6 +678,61 @@ function drawSide(sel){
 }
 
 // -------- génération automatique --------
+/* Nombre d'enchaînements où l'on arrive après l'heure conseillée. */
+function countTight(plan){
+  let n = 0;
+  for(let i = 0; i < plan.length; i++) for(let k = i+1; k < plan.length; k++){
+    const a = plan[i], b = plan[k];
+    if(a.d !== b.d || a.w || b.w) continue;
+    const [x,y] = a.s <= b.s ? [a,b] : [b,a];
+    if(link(x,y).lvl === 'warn') n++;
+  }
+  return n;
+}
+/* Arbitrage « en retard » : quand un enchaînement est serré, on cherche mieux, dans cet ordre.
+   1. une autre séance du MÊME spectacle qui supprime le retard ;
+   2. un autre spectacle du MÊME niveau d'envie qui supprime le retard ;
+   3. si le retard est inévitable, la séance à la PLUS GRANDE JAUGE — plus la salle est grande,
+      plus on a de chances d'entrer malgré l'arrivée tardive.
+   Le niveau d'envie n'est jamais dégradé, le nombre de spectacles jamais réduit,
+   et les séances choisies à la main par l'utilisateur ne sont jamais déplacées. */
+function deTighten(plan, lockedU){
+  const tightWith = (c, others) => {          // null = incompatible · sinon nb d'enchaînements serrés
+    let n = 0;
+    for(const p of others){
+      if(p.d !== c.d || p.w || c.w) continue;
+      const [a,b] = p.s <= c.s ? [p,c] : [c,p];
+      const l = link(a,b).lvl;
+      if(l === 'bad') return null;
+      if(l === 'warn') n++;
+    }
+    return n;
+  };
+  const taken = new Set(plan.map(e => e.u));
+  for(let pass = 0; pass < 6; pass++){
+    let moved = false;
+    for(let i = 0; i < plan.length; i++){
+      const cur = plan[i];
+      if(cur.w || lockedU.has(cur.u)) continue;             // choix manuel : on n'y touche pas
+      const others = plan.filter((_, k) => k !== i);
+      const curT = tightWith(cur, others);
+      if(curT === null || curT === 0) continue;             // déjà confortable
+      let best = cur, bestT = curT, bestJ = cur.j || 0;
+      const cands = E.filter(e => S.days.has(e.d) && !e.w && e.i !== cur.i && !lockedU.has(e.u)
+        && (e.u === cur.u || (rk(e.u) === rk(cur.u) && rk(e.u) > 0 && !taken.has(e.u))));
+      for(const alt of cands){
+        const t = tightWith(alt, others);
+        if(t === null) continue;
+        const j = alt.j || 0;
+        if(t < bestT || (t === bestT && j > bestJ)){ best = alt; bestT = t; bestJ = j }
+      }
+      if(best !== cur){ taken.delete(cur.u); taken.add(best.u); plan[i] = best; moved = true }
+    }
+    if(!moved) break;
+  }
+  return plan;
+}
+
 function buildPlan(){
   const locked = [...S.sel].map(i => byI.get(i)).filter(e => S.days.has(e.d));
   const lockedU = new Set(locked.map(e => e.u));
@@ -691,6 +762,8 @@ function buildPlan(){
                    + p.filter(e => rk(e.u) === 1).length;
   let best = run(0);
   for(let t = 0; t < 400; t++){ const p = run(90); if(score(p) > score(best)) best = p }
+  const tightBefore = countTight(best);
+  best = deTighten(best, lockedU);
 
   S.sel = new Set(best.map(e => e.i));
   const placed = new Set(best.map(e => e.u));
@@ -702,6 +775,14 @@ function buildPlan(){
   $('report').innerHTML =
       `<b>${best.length} séances</b> sur ${S.days.size} jour${S.days.size>1?'s':''} —
        ★ ${ok(3)}/${cnt(3)} · ♥ ${ok(2)}/${cnt(2)} · ? ${ok(1)}/${cnt(1)}`
+    + (() => {
+        const t = countTight(best);
+        if(!tightBefore && !t) return '';
+        if(t < tightBefore) return `<br><span class="muted">${tightBefore - t} arrivée(s) en retard évitée(s)
+          en changeant de séance.${t ? ` Il en reste ${t}, sur les plus grandes jauges disponibles.` : ''}</span>`;
+        return t ? `<br><span class="muted">${t} arrivée(s) après l’heure conseillée, impossibles à éviter :
+          j’ai retenu les séances aux plus grandes jauges pour maximiser tes chances d’entrer.</span>` : '';
+      })()
     + (missed.length
         ? `<br><span class="muted">★ non casés : ${missed.map(u => esc((E.find(e => e.u === u)||{}).t || '?')).join(', ')}.`
           + (noDay.length ? ` Dont ${noDay.length} qui ne jouent pas sur tes jours.` : '')
@@ -713,6 +794,126 @@ function buildPlan(){
   $('toggleSide').innerHTML = '← Calendrier';
 }
 $('build').onclick = buildPlan;
+
+// ---------------------------------------------------------------- sauvegarde par code
+/* Un code = un identifiant de ligne à 6 chiffres dans une table Appwrite.
+   Aucune clé secrète ici : seul l'identifiant de projet circule, il est public par nature.
+   La table n'accorde ni suppression ni écriture ciblée à un visiteur (vérifié : DELETE → 401). */
+const AW = {
+  ep: 'https://appwrite.jeremieguillot.com/v1',
+  project: '6a60da2f0038204065fa',
+  rows: '/tablesdb/cdlr/tables/plannings/rows',
+  max: 65000
+};
+const showCode = c => c.slice(0,2)+'-'+c.slice(2,4)+'-'+c.slice(4,6);
+const cleanCode = s => (s||'').replace(/\D/g,'').slice(0,6);
+
+async function aw(method, path, body){
+  const r = await fetch(AW.ep + path, {
+    method,
+    headers: {'X-Appwrite-Project': AW.project, 'Content-Type': 'application/json'},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  let j = null; try{ j = await r.json() }catch(_){}
+  return {ok:r.ok, status:r.status, j};
+}
+const snapshot = () => ({
+  v:1, rank:Object.fromEntries(S.rank), sel:[...S.sel].map(i => KEY(byI.get(i))),
+  days:[...S.days], marges:S.marges, speed:S.speed
+});
+function applySnapshot(d){
+  if(!d || typeof d !== 'object') throw new Error('format');
+  S.rank = new Map(Object.entries(d.rank || {}).filter(([u,v]) => [3,2,1,-1].includes(+v)).map(([u,v]) => [u,+v]));
+  S.sel.clear();
+  (d.sel || []).forEach(k => {const e = byKey.get(k); if(e) S.sel.add(e.i)});
+  if(Array.isArray(d.days) && d.days.length){
+    const dd = d.days.filter(x => DAYS.includes(x));
+    if(dd.length) S.days = new Set(dd);
+  }
+  if(d.marges) TIERS.forEach(t => {if(typeof d.marges[t.id] === 'number') S.marges[t.id] = d.marges[t.id]});
+  if(typeof d.speed === 'number') S.speed = d.speed;
+  save();
+}
+const netMsg = e => location.protocol === 'file:'
+  ? 'La sauvegarde ne marche pas quand la page est ouverte directement depuis un fichier. Passe par l’adresse du site (https://justjerem.github.io/site-cdlr/).'
+  : 'Serveur injoignable. Vérifie ta connexion et réessaie.';
+
+async function cloudSave(){
+  const out = $('saveOut'), btn = $('doSave');
+  const body = JSON.stringify(snapshot());
+  if(!S.rank.size && !S.sel.size){
+    out.innerHTML = `<div class="msg info">Rien à sauvegarder pour l’instant : commence par trier quelques spectacles.</div>`;
+    return;
+  }
+  if(body.length > AW.max){
+    out.innerHTML = `<div class="msg err">Sauvegarde trop volumineuse (${Math.round(body.length/1024)} Ko).</div>`;
+    return;
+  }
+  btn.disabled = true; out.innerHTML = `<div class="msg info">Envoi en cours…</div>`;
+  try{
+    if(S.code){                                       // même code : on écrase l'ancienne version
+      const r = await aw('PUT', `${AW.rows}/${S.code}`, {data:{payload:body}});
+      if(r.ok){ codeOk(S.code, true); return }
+      if(r.status !== 404) throw new Error('http '+r.status);
+      S.code = '';                                    // la ligne n'existe plus : on en refait une
+    }
+    for(let t = 0; t < 10; t++){
+      const c = String(Math.floor(Math.random()*1e6)).padStart(6,'0');
+      const r = await aw('POST', AW.rows, {rowId:c, data:{payload:body}});
+      if(r.ok){ S.code = c; save(); codeOk(c, false); return }
+      if(r.status !== 409) throw new Error('http '+r.status);   // 409 = code déjà pris, on retente
+    }
+    throw new Error('collisions');
+  }catch(e){
+    out.innerHTML = `<div class="msg err">${esc(netMsg(e))}</div>`;
+  }finally{ btn.disabled = false }
+}
+function codeOk(c, updated){
+  $('saveOut').innerHTML = `<div class="bigcode">
+      <span class="val">${showCode(c)}</span>
+      <button class="btn sm" id="copyCode">Copier</button>
+      <span style="font-size:11.5px;color:var(--ink2)">${updated ? 'mise à jour enregistrée' : 'note bien ce code'}</span>
+    </div>
+    <div class="msg info">Sur ton téléphone : ouvre le site, va sur <b>Mes envies</b> et tape ce code dans
+      « Récupérer avec un code ». Chaque nouvelle sauvegarde réutilise le même code, tu n’en auras qu’un seul à retenir.</div>`;
+  const b = $('copyCode');
+  if(b) b.onclick = () => {
+    navigator.clipboard?.writeText(showCode(c)).then(() => {b.textContent = 'Copié ✓'}).catch(() => {});
+  };
+}
+async function cloudLoad(){
+  const out = $('loadOut'), btn = $('doLoad');
+  const c = cleanCode($('codeIn').value);
+  if(c.length !== 6){
+    out.innerHTML = `<div class="msg err">Le code fait 6 chiffres, par exemple 48-15-02.</div>`;
+    return;
+  }
+  btn.disabled = true; out.innerHTML = `<div class="msg info">Recherche…</div>`;
+  try{
+    const r = await aw('GET', `${AW.rows}/${c}`);
+    if(r.status === 404){
+      out.innerHTML = `<div class="msg err">Aucune sauvegarde pour le code ${showCode(c)}. Vérifie les chiffres.</div>`;
+      return;
+    }
+    if(!r.ok) throw new Error('http '+r.status);
+    applySnapshot(JSON.parse(r.j.payload));
+    S.code = c; save();
+    const n = [...S.rank.values()];
+    out.innerHTML = `<div class="msg ok">Récupéré : ★ ${n.filter(v=>v===3).length} · ♥ ${n.filter(v=>v===2).length}
+      · ? ${n.filter(v=>v===1).length} · ✕ ${n.filter(v=>v===-1).length}, ${S.sel.size} séance(s) au planning.</div>`;
+    drawReview(); render(); drawSettings();
+  }catch(e){
+    out.innerHTML = `<div class="msg err">${esc(e.message === 'format' ? 'Sauvegarde illisible.' : netMsg(e))}</div>`;
+  }finally{ btn.disabled = false }
+}
+$('doSave').onclick = cloudSave;
+$('doLoad').onclick = cloudLoad;
+$('codeIn').oninput = e => {
+  const c = cleanCode(e.target.value);
+  e.target.value = c.length > 4 ? showCode(c.padEnd(6,'')).replace(/-$/,'')
+                 : c.length > 2 ? c.slice(0,2)+'-'+c.slice(2) : c;
+};
+$('codeIn').onkeydown = e => {if(e.key === 'Enter') cloudLoad()};
 
 // ---------------------------------------------------------------- réglages
 function drawSettings(){
@@ -734,8 +935,9 @@ $('setDefaults').onclick = () => {
 };
 $('resetAll').onclick = () => {
   if(!confirm('Effacer toutes tes envies, ton planning et tes réglages ?')) return;
-  S.rank.clear(); S.sel.clear(); S.days = new Set(DAYS);
+  S.rank.clear(); S.sel.clear(); S.days = new Set(DAYS); S.code = '';
   TIERS.forEach(t => S.marges[t.id] = t.def); S.speed = 4.2;
+  $('saveOut').innerHTML = ''; $('loadOut').innerHTML = ''; $('codeIn').value = '';
   save(); drawSettings(); go('discover'); render();
 };
 const openSet  = () => {drawSettings(); $('settings').classList.add('on')};
@@ -746,7 +948,7 @@ $('closeSettings').onclick = closeSet;
 $('settings').onclick = e => {if(e.target.id === 'settings') closeSet()};
 
 // ---------------------------------------------------------------- démarrage
-window.APP = {S, SW, LV, TIERS, link, avance, walk, status, selected, suggestions, buildPlan, render, go, save, load, setRank, rk, fmt, dur, venue, venueLine, byI, repsOf, drawSwipe, drawReview, drawFilterBar, buildSwipeList, decide, undoSwipe};
+window.APP = {S, SW, LV, TIERS, link, avance, walk, status, selected, suggestions, buildPlan, render, go, save, load, setRank, rk, fmt, dur, venue, venueLine, byI, repsOf, drawSwipe, drawReview, drawFilterBar, buildSwipeList, decide, undoSwipe, cloudSave, cloudLoad, snapshot, applySnapshot, showCode, cleanCode, AW, countTight, deTighten, chances};
 load();
 render();
 go(S.rank.size ? (S.sel.size ? 'plan' : 'review') : 'discover');

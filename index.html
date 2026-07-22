@@ -181,6 +181,25 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .rcard .rank{margin-top:7px}
 .rcard .tags{display:flex;gap:3px;flex-wrap:wrap}
 
+/* ---------- sauvegarde par code ---------- */
+#syncBox{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:30px;
+  border-top:1px solid var(--line);padding-top:22px}
+.synccard{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);
+  padding:14px 16px;box-shadow:var(--shadow)}
+.synccard h3{margin:0 0 6px;font-size:14px;font-weight:650}
+.synccard p{margin:0 0 11px;font-size:12px;line-height:1.55;color:var(--ink2)}
+.codeline{display:flex;gap:7px}
+#codeIn{flex:1;min-width:0;background:var(--surface);border:1px solid var(--line2);border-radius:8px;
+  padding:7px 11px;font-size:17px;letter-spacing:.16em;font-variant-numeric:tabular-nums;text-align:center}
+#codeIn:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.bigcode{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--ok-soft);
+  border:1px solid var(--ok);border-radius:9px;padding:11px 13px;margin-top:10px}
+.bigcode .val{font-size:27px;font-weight:700;letter-spacing:.1em;font-variant-numeric:tabular-nums;color:var(--ok)}
+.msg{margin-top:9px;font-size:12px;line-height:1.5;border-radius:8px;padding:8px 11px}
+.msg.err{background:var(--bad-soft);color:var(--bad);border:1px solid var(--bad)}
+.msg.info{background:var(--surface2);color:var(--ink2);border:1px solid var(--line)}
+.msg.ok{background:var(--ok-soft);color:var(--ok);border:1px solid var(--ok)}
+
 /* ---------- étape 3 : planning ---------- */
 #planPane{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 372px}
 #calWrap{min-width:0;display:flex;flex-direction:column;min-height:0}
@@ -303,6 +322,7 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
   #planPane.showside>#side{display:block}
   .revwrap{padding:12px 12px 40px}
   .revgrid{grid-template-columns:1fr}
+  #syncBox{grid-template-columns:1fr}
   #discoverPane{padding:0;align-items:stretch}
   #swWrap{gap:0;height:100%}
   #swFilters{border-radius:0;border-left:0;border-right:0;box-shadow:none}
@@ -416,7 +436,29 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
       <button class="btn" id="revDiscover">♥ Continuer à découvrir</button>
       <button class="btn primary" id="revToPlan">Générer mon planning →</button>
     </div>
-    <div class="scrollarea"><div class="revwrap" id="revBody"></div></div>
+    <div class="scrollarea"><div class="revwrap">
+      <div id="revBody"></div>
+      <section id="syncBox">
+        <div class="synccard">
+          <h3>☁︎ Sauvegarder mes envies</h3>
+          <p>Range tes choix en ligne et te renvoie un <b>code à 6 chiffres</b>. Note-le : il te suffit
+             de le retaper sur ton téléphone ou sur un autre ordinateur pour tout retrouver.
+             Rien d’autre n’est enregistré — ni nom, ni compte, ni adresse mail.</p>
+          <button class="btn primary" id="doSave">Sauvegarder</button>
+          <div id="saveOut"></div>
+        </div>
+        <div class="synccard">
+          <h3>↺ Récupérer avec un code</h3>
+          <p>Tu as déjà trié tes spectacles ailleurs ? Tape le code reçu et tout revient :
+             envies, jours de présence, réglages et planning.</p>
+          <div class="codeline">
+            <input id="codeIn" inputmode="numeric" autocomplete="off" maxlength="8" placeholder="00-00-00">
+            <button class="btn" id="doLoad">Récupérer</button>
+          </div>
+          <div id="loadOut"></div>
+        </div>
+      </section>
+    </div></div>
   </section>
 
   <!-- ÉTAPE 3 -->
@@ -479,6 +521,6 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 </div></div>
 
 <script src="data.js?v=5"></script>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=7"></script>
 </body>
 </html>
