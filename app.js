@@ -168,7 +168,6 @@ function go(step){
 $('steps').onclick = e => {const b = e.target.closest('button'); if(b) go(b.dataset.s)};
 $('revDiscover').onclick = () => go('discover');
 $('revToPlan').onclick   = () => {go('plan'); buildPlan()};
-$('swClose').onclick     = () => go('review');
 
 // ---------------------------------------------------------------- étape 1 : découvrir
 const repsOf = u => E.filter(e => e.u === u).sort((a,b) => a.d.localeCompare(b.d) || a.s-b.s);
@@ -288,7 +287,7 @@ addEventListener('keydown', ev => {
 (() => {
   const c = $('swCard'); let x0=null, y0=0, dx=0, dy=0;
   c.addEventListener('pointerdown', e => {
-    if(e.target.closest('button,a,#swBody')) return;
+    if(e.target.closest('button,a')) return;
     x0=e.clientX; y0=e.clientY; dx=dy=0; c.setPointerCapture(e.pointerId); c.style.transition='';
   });
   c.addEventListener('pointermove', e => {

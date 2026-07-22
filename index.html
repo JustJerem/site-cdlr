@@ -110,8 +110,9 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .frow>.lbl:first-child{flex:0 0 74px}
 #swCard{background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden;
   display:flex;flex-direction:column;position:relative;box-shadow:var(--shadow);touch-action:pan-y;user-select:none}
+#swScrollArea{overflow:auto; flex:1 1 auto; min-height:0; display:flex; flex-direction:column}
 #swImg{width:100%;height:200px;object-fit:cover;background:var(--surface2);flex:0 0 auto;display:block}
-#swBody{padding:14px 16px;overflow:auto;flex:1 1 auto}
+#swBody{padding:14px 16px;flex:0 0 auto}
 #swBody h3{margin:0;font-size:21px;line-height:1.2;letter-spacing:-.01em}
 #swCie{color:var(--ink2);font-size:13px;margin:3px 0 0}
 #swSub{font-style:italic;color:var(--accent);font-size:13px;margin:6px 0 0}
@@ -131,8 +132,6 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 #swNo{border-color:var(--line2);color:var(--ink3)}
 #swStamp{position:absolute;top:16px;left:16px;font-size:24px;font-weight:800;padding:4px 12px;border-radius:9px;
   opacity:0;pointer-events:none;transform:rotate(-11deg);color:#fff;z-index:4}
-#swClose{position:absolute;top:9px;right:9px;z-index:5;background:rgba(0,0,0,.55);color:#fff;border:0;
-  border-radius:8px;width:30px;height:30px;font-size:15px;cursor:pointer}
 
 /* ---------- étape 2 : mes envies ---------- */
 .revwrap{padding:14px 16px 40px;max-width:1300px;margin:0 auto}
@@ -339,17 +338,18 @@ main{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
           </div>
         </div>
         <div id="swCard">
-          <button id="swClose" title="Fermer">✕</button>
           <div id="swStamp"></div>
-          <img id="swImg" alt="">
-          <div id="swBody">
-            <h3 id="swTitle"></h3>
+          <div id="swScrollArea">
+            <img id="swImg" alt="">
+            <div id="swBody">
+              <h3 id="swTitle"></h3>
             <p id="swCie"></p>
             <p id="swSub"></p>
             <div id="swTags"></div>
             <div id="swDesc"></div>
             <div id="swSeances"></div>
             <div id="swLinks"></div>
+          </div>
           </div>
           <div id="swFoot">
             <div class="swRow1">
