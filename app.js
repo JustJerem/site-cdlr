@@ -376,16 +376,24 @@ $('revShowNo').onclick   = () => {S.revNo   = !S.revNo;   drawReview(); syncChip
 
 // ---------------------------------------------------------------- étape 3 : planning
 $('tabs').innerHTML = DAYS.map(d => `<button data-d="${d}">${DAYNAME[d]}</button>`).join('');
-$('presence').innerHTML = DAYS.map(d =>
+const presHtml = DAYS.map(d =>
   `<label style="display:inline-flex;gap:3px;align-items:center;font-size:12.5px;cursor:pointer">
      <input type="checkbox" data-p="${d}" style="accent-color:var(--accent);margin:0"> ${DAYNAME[d].split(' ')[0]}</label>`).join('');
-$('presence').onchange = ev => {
+$('presence').innerHTML = presHtml;
+$('presence1').innerHTML = presHtml;
+const handlePresence = ev => {
+  if(ev.target.tagName !== 'INPUT') return;
   const d = ev.target.dataset.p;
   ev.target.checked ? S.days.add(d) : S.days.delete(d);
   if(!S.days.size){ S.days.add(d); ev.target.checked = true }
   E.forEach(e => {if(!S.days.has(e.d)) S.sel.delete(e.i)});
-  save(); render();
+  save(); 
+  document.querySelectorAll('#presence input, #presence1 input').forEach(c => c.checked = S.days.has(c.dataset.p));
+  if(S.step === 'discover') { buildSwipeList(); drawFilterBar(); drawSwipe(); }
+  render();
 };
+$('presence').onchange = handlePresence;
+$('presence1').onchange = handlePresence;
 $('tabs').onclick = ev => {const b = ev.target.closest('button'); if(b){S.day = b.dataset.d; render()}};
 $('view').onchange = e => {S.view = e.target.value; render()};
 $('hideBlocked').onclick = () => {S.hide = !S.hide; render()};
@@ -467,7 +475,7 @@ function render(){
     b.style.opacity = S.days.has(b.dataset.d) ? '' : '.45';
     b.style.textDecoration = S.days.has(b.dataset.d) ? '' : 'line-through';
   });
-  document.querySelectorAll('#presence input').forEach(c => c.checked = S.days.has(c.dataset.p));
+  document.querySelectorAll('#presence input, #presence1 input').forEach(c => c.checked = S.days.has(c.dataset.p));
 
   const sel = selected();
   const st = new Map(E.map(e => [e.i, status(e, sel)]));
